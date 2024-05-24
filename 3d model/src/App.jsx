@@ -1,7 +1,6 @@
 import React from 'react';
 import { BrowserRouter, Router, Route, Routes} from 'react-router-dom';
 import ModelViewer from './Components/ModelViewer';
-import Dashboard from './Components/Dashboard';
 import DashboardPage from './Pages/DashboardPage';
 
 function App() {

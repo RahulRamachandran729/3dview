@@ -14,12 +14,12 @@ function ModelViewer() {
     useEffect(() => {
         axios.get('http://localhost:5173/models')
             .then(response => setModels(response.data))
-            .catch(error => console.error(error));
+            .catch(error => console.error('Error fetching models:', error));
     }, []);
 
     return (
         <div>
-            {models.map(model => (
+             {Array.isArray(models) && models.map(model => (
                 <div key={model._id}>
                     <h3>{model.name}</h3>
                     <Canvas style={{ height: 400 }}>

@@ -1,67 +1,23 @@
-const express = require('express');
-const mongoose = require('mongoose');
-const multer = require('multer');
-const cors = require('cors');
-const path = require('path');
-const fs = require('fs');
+const app = require("./app");
 const connectDB = require('./DB/connect');
 
-const app = express();
-app.use(cors({
-    origin:'http://localhost:5173',
-    credentials:true,
-}));
-app.use(express.json());
-
-
-// connect db
-connectDB()
-
-const modelSchema = new mongoose.Schema({
-    name: String,
-    filePath: String
-});
-
-const Model = mongoose.model('Model', modelSchema);
-
-// Configure multer for file uploads
-const storage = multer.diskStorage({
-    destination: (req, file, cb) => {
-        cb(null, 'uploads/');
-    },
-    filename: (req, file, cb) => {
-        cb(null, Date.now() + path.extname(file.originalname));
-    }
-});
-
-const upload = multer({ storage });
-
-// Create uploads directory if not exists
-if (!fs.existsSync('uploads')) {
-    fs.mkdirSync('uploads');
-}
-
-// API endpoints
-app.post('/upload', upload.single('model'), async (req, res) => {
-    const model = new Model({
-        name: req.body.name,
-        filePath: req.file.path
+// Connect to the database
+connectDB().then(() => {
+    // Start the server only after DB connection is successful
+    const server = app.listen(5000, () => {
+        console.log('Server started on http://localhost:5000');
     });
-    await model.save();
-    res.send(model);
-});
 
-app.get('/models', async (req, res) => {
-    const models = await Model.find();
-    res.send(models);
-});
+    // Handle unhandled promise rejections
+    process.on('unhandledRejection', (err) => {
+        console.log(`Shutting down the server for ${err.message}`);
+        console.log('Shutting down the server for unhandled promise rejection');
 
-app.get('/models/:id', async (req, res) => {
-    const model = await Model.findById(req.params.id);
-    res.sendFile(path.resolve(model.filePath));
-});
-
-// Start the server
-app.listen(5000, () => {
-    console.log('Server started on http://localhost:5000');
+        server.close(() => {
+            process.exit(1);
+        });
+    });
+}).catch((err) => {
+    console.error('Failed to connect to the database:', err);
+    process.exit(1); // Exit the process with failure code
 });
